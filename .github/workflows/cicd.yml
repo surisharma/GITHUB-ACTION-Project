@@ -80,6 +80,12 @@ jobs:
         cache: maven
     - name:  Build Package
       run: mvn package
+    - name: 'Upload Artifact'
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-jar
+        path: target/*.jar
+   
     - uses: actions/checkout@v6
       with:
         # Disabling shallow clones is recommended for improving the relevancy of reporting
@@ -98,3 +104,29 @@ jobs:
       env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }} #OPTIONAL    
+  build_image_push:
+    runs-on: self-hosted
+    needs: build_project_scan
+    steps:
+    - uses: actions/checkout@v4
+    - name: 'Download Artifact'
+      uses: actions/download-artifact@v4
+      with:
+        name: app-jar
+        path: app
+    - name: Login to Docker Hub
+      uses: docker/login-action@v4
+      with:
+        username: ${{ vars.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v4
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
+    - name: Build and push
+      uses: docker/build-push-action@v7
+      with:
+        context: .
+        push: true
+        tags: suri05/bankapp:latest
+        file: /Dockerfile
