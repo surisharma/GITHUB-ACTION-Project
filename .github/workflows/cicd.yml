@@ -129,4 +129,4 @@ jobs:
         context: .
         push: true
         tags: suri05/bankapp:latest
-        file: /Dockerfile
+        file: ./Dockerfile
